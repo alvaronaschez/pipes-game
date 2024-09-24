@@ -21,28 +21,34 @@ def neighbors(i: int, j: int, pipe: int) -> set[tuple[int, int]]:
 
 
 def is_valid_solution(solution: list[list[int]]) -> bool:
-    pred: dict[tuple[int,int], tuple[int, int]] = dict()
+    predecessor: dict[tuple[int,int], tuple[int, int]] = dict()
     visited: set[tuple[int, int]] = set()
-    q: list[tuple[int, int] ]= [(0,0)]
-    while(len(visited)<16 and q):
-        current_x, current_y = q.pop(0)
-        for neighbor in neighbors(current_x, current_y, solution[current_x][current_y]):
-            if(neighbor[0]<0 or neighbor[0]>3 or neighbor[1]<0 or neighbor[1]>3):
+    queue: list[tuple[int, int] ]= [(0,0)]
+    while(len(visited)<16 and queue):
+        current = queue.pop()
+        current_neighbors = neighbors(current[0], current[1], solution[current[0]][current[1]])
+        if predecessor:
+            if predecessor[current] not in current_neighbors:
+                # not connected with its predecessor
                 return False
-            if(neighbor == pred.get((current_x, current_y))):
-                continue
+            else:
+                current_neighbors.remove(predecessor[current])
+        for neighbor in current_neighbors:
+            if(neighbor[0]<0 or neighbor[0]>3 or neighbor[1]<0 or neighbor[1]>3):
+                # neighbor out of the grid
+                return False
             if(neighbor in visited):
-                print("ya visitado")
-                print(f"current: ({current_x},{current_y})")
-                print(f"neighbor: ({neighbor[0]},{neighbor[1]})")
-                print(f"pred: ({pred[(current_x, current_y)]})")
+                # cycle detected
                 return False
             
-            q.append(neighbor)
-            pred[neighbor] = (current_x, current_y)
+            queue.append(neighbor)
+            predecessor[neighbor] = current
         
-        visited.add((current_x, current_y))
-    return len(visited)==16
+        visited.add(current)
+    if len(visited)<16:
+        # not visited nodes
+        return False
+    return True
 
 class TestPipesGame(unittest.TestCase):
     def test_neighbors(self):
